@@ -17,4 +17,5 @@ Here I am gathering my work on the Melbourne Pedestrian footfall time-series.
 4. [Clustering](https://github.com/jackliddle/melbourne-timeseries/blob/main/04%20Clustering%20Analysis.ipynb) It would be great to be able to cluster these locations together. Do we have true labels for the sites? Sort of, we have the location names and with a little work we can use these to grade the quality of our clustering analysis.
 
 5. Forecasting
-   * 5a [Forecasting](https://github.com/jackliddle/melbourne-timeseries/blob/main/05a%20Forecasting.ipynb) Starting to build forecasting models and setting a baseline.
+   * 5a [Forecasting Introduction](https://github.com/jackliddle/melbourne-timeseries/blob/main/05a%20Forecasting%20Introduction.ipynb) Introduction to some of the key concepts of building forecasting models.
+   * 5b [Forecasting](https://github.com/jackliddle/melbourne-timeseries/blob/main/05b%20Forecasting.ipynb) Starting to build forecasting models and setting a baseline.
