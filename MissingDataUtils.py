@@ -46,13 +46,14 @@ def plotMissing(gaps_d,ax):
                 ax.barh(y_pos, end_time - start_time, left=start_time, height=1, color='red')
     
     date_format = DateFormatter('%Y-%m')  # Define the date format
-    month_locator = MonthLocator(interval=12) 
+    month_locator = MonthLocator(bymonth=1,interval=1)
+    
     ax.xaxis.set_major_formatter(date_format)  # Set the date format
     ax.xaxis.set_major_locator(month_locator)  # Set the tick locator to show ticks on the 1st day of January and every 3 months
 
     ax.set_yticks([i for i in range(0, len(gaps_d) * 2, 2)])
     ax.set_yticklabels(gaps_d.keys())
-    ax.set_xlabel('Time')
+    ax.set_xlabel('Date')
 
     ax.tick_params(axis='x', rotation=45)  # Rotate x-axis labels
 

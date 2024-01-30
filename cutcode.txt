@@ -1,0 +1,166 @@
+variance_explained = np.sum(fitted[:, :3] ** 2, axis=1) / np.sum(fitted ** 2, axis=1)
+index_max_variance = np.argsort(variance_explained)[-10:][::-1]
+index_max_variance
+#vector_max_variance = transformed_vectors[index_max_variance]
+
+normalized_variance_explained = (fitted ** 2).T / np.sum(fitted ** 2, axis=1)
+normalized_variance_explained = normalized_variance_explained.T
+
+# Step 2: Define weights
+weights = np.array([0.3, 0.3, 0.2] + [-0.01] * (fitted.shape[1] - 3))
+
+# Step 3: Calculate scores for all vectors
+scores = np.dot(normalized_variance_explained, weights)
+
+# Step 4: Select the vector with the highest score
+index_best_vector = np.argmax(scores)
+best_vector = fitted[index_best_vector]
+
+print("Best vector:", best_vector)
+print("Score:", scores[index_best_vector])
+#In this code, the weights are set to value the contributions from the first three components and slightly penalize contributions from all other components. You may need to adjust the weights and the score function to suit your specific needs and the characteristics of your data.
+
+
+
+
+print(index_best_vector)
+
+
+########################################################################
+
+Scaling the data for PCA..
+
+########################################################################
+
+
+Lets plot the daily behaviour for each location (just a subset to illustrate the problem). Keeping the y-scale the same.
+
+The *magnitudes* of the counts vary massively between the locations, and in our PCA analysis we put a lot of emphasis on the *busyness*
+To illustrate this lets look at the daily fingerprints for a lot of locations. The error bar represents the standard deviation over all the different days.
+
+unique_locations = df1['LocationName'].unique()
+subset_locations = unique_locations[:25]
+
+g = sns.FacetGrid(df1[df1['LocationName'].isin(subset_locations)],
+                  col="LocationName",
+                  col_wrap=5, sharey=True,
+                  margin_titles=True, height=4, aspect=1)
+g.map_dataframe(sns.lineplot, x="Hour", y="HourlyCount", errorbar='sd')
+g.set_axis_labels("Hour", "Average Hourly Count")
+g.set_titles(col_template="{col_name}")
+
+plt.show()
+
+
+def normalize_by_busiest_hour(group):
+    # Identify the busiest hour for the group (location) and compute its mean count
+    busiest_hour = group.groupby('Hour')['HourlyCount'].mean().idxmax()
+    mean_count_busiest_hour = group[group['Hour'] == busiest_hour]['HourlyCount'].mean()
+    
+    # Normalize the HourlyCount values for the group
+    group['NormalizedHourlyCount'] = group['HourlyCount'] / mean_count_busiest_hour
+    return group
+
+# Apply the normalization function to each location group, with group_keys set to False
+df1 = df1.groupby('LocationName', group_keys=False).apply(normalize_by_busiest_hour)
+
+unique_locations = df1['LocationName'].unique()
+subset_locations = unique_locations[:25]
+
+g = sns.FacetGrid(df1[df1['LocationName'].isin(subset_locations)],
+                  col="LocationName",
+                  col_wrap=5, sharey=True,
+                  margin_titles=True, height=4, aspect=1)
+g.map_dataframe(sns.lineplot, x="Hour", y="NormalizedHourlyCount", errorbar='sd')
+g.set_axis_labels("Hour", "Average Hourly Count")
+g.set_titles(col_template="{col_name}")
+for ax in g.axes.flat:
+    ax.yaxis.grid(True)
+    ax.xaxis.grid(False)
+plt.show()
+
+def get_pca_from_pipeline(pipeline):
+    for step in pipeline.steps:
+        if isinstance(step[1], PCA):
+            return step[1]
+    return None
+
+def linkYlims(axs):
+    ymin = min(ax.get_ylim()[0] for ax in axs) 
+    ymax = max(ax.get_ylim()[1] for ax in axs) 
+    for ax in axs:
+        ax.set_ylim(ymin, ymax)
+
+
+df_days_normed = df1.pivot_table(index=['LocationName', 'Date'],
+    columns='Hour', values='NormalizedHourlyCount', aggfunc='sum').reset_index()
+
+daynormed_array,daynormed_labels,_  = aggregatedDFtoArray(df_days_normed ,hoursdays_columns)
+
+arr = daynormed_array
+labels = daynormed_labels
+
+pipeline1 = Pipeline([
+    ('pca', PCA())  
+])
+
+fitted = pipeline1.fit_transform(arr)
+pca = get_pca_from_pipeline(pipeline1)
+comps = pca.components_
+
+plt.plot( np.arange(1,25),np.cumsum( pca.explained_variance_ratio_ ),'s-' )
+
+fig,ax = plt.subplots(1,1)
+ax.plot(np.mean(arr,axis=0))
+ax.set_title('Mean')
+ax.set_xticks(range(0, 24, 6))
+ax.set_xticks(range(0, 24), minor=True)
+ax.grid(which='major', axis='x', linestyle='-')
+        
+fig,axs = plt.subplots(2,3)
+axs = axs.flatten()
+for ax,row,c in zip(axs,comps,itertools.count(1)):
+    ax.plot(row)
+    ax.set_title(f"Component {c}")
+    ax.set_xticks(range(0, 24, 6))
+    ax.set_xticks(range(0, 24), minor=True)
+    ax.grid(which='major', axis='x', linestyle='-')
+
+linkYlims(axs)
+plt.tight_layout()
+
+
+plotly_markers = ['circle', 'square', 'diamond']
+
+comps_plots = [1,2,3]#[1, 2, 3]
+unique_labels = np.unique(labels)
+
+# Create a scatter plot for each label
+traces = []
+for idx, label in enumerate(unique_labels):
+    data_for_label = fitted[labels == label]
+    trace = go.Scatter3d(
+        x=data_for_label[::1, comps_plots[0]-1],
+        y=data_for_label[::1, comps_plots[1]-1],
+        z=data_for_label[::1, comps_plots[2]-1],
+        mode='markers',
+        marker=dict(symbol=plotly_markers[idx % len(plotly_markers)], size=2),
+        name=str(label)
+    )
+    traces.append(trace)
+
+# Create the layout
+layout = go.Layout(
+    scene=dict(
+        xaxis_title=f"comp{comps_plots[0]}",
+        yaxis_title=f"comp{comps_plots[1]}",
+        zaxis_title=f"comp{comps_plots[2]}"
+    ),
+    showlegend=False,
+    width=800,  # Adjust as needed
+    height=800   # Adjust as needed
+)
+
+# Create the figure and display it
+fig = go.Figure(data=traces, layout=layout)
+fig.show()

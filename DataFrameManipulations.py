@@ -16,6 +16,12 @@ def countsLongToWideHourly(df_counts):
     df1 = df1.asfreq('h')
     return df1
 
+def countsLongToWideDaily(df_counts):
+    df1 = df_counts[['LocationName','DailyCount','DateTime']]
+    df1 = df1.pivot(index='DateTime',columns='LocationName',values='DailyCount')
+    df1 = df1.asfreq('D')
+    return df1
+    
 if __name__ == "__main__":
     from PedestrianDataImporter import getHourlyCounts
     from Imputation import repairRepeatedMidnightStamps

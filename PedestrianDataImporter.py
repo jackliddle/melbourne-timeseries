@@ -18,8 +18,8 @@ from tqdm import tqdm
 from cacheDecorator import cacheDecorator
 from DateTimeHelpers import parse_date
 
-import ssl
-ssl._create_default_https_context = ssl._create_unverified_context
+# import ssl
+# ssl._create_default_https_context = ssl._create_unverified_context
 # %% The goal here is to have a common interface/dataframe 
 
 # TODO:
