@@ -8,3 +8,10 @@ Melbourne_stored.pkl
 .ipynb_checkpoints/DataFrameManipulations-checkpoint.py
 .ipynb_checkpoints/map-checkpoint.html
 .ipynb_checkpoints/MissingDataUtils-checkpoint.py
+
+
+# Mac crap
+.DS_Store
+
+# Idea IDA
+.idea/
