@@ -12,7 +12,11 @@ with open(os.path.join('temp', 'x.pickle'), 'rb') as file:
 with open(os.path.join('temp', 'y.pickle'), 'rb') as file:
     y = pickle.load(file)
 
-print(f"Loaded data:\n\tx: {x}\n\ty:{y}")
+#print(f"Loaded data:\n\tx: {x}\n\ty:{y}")
+# Check x and y have same length
+assert len(x) == len(y), "x and y have different length"
+
+print(f"Loaded data")
 
 
 # Start your Dash app
